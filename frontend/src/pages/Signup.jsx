@@ -23,15 +23,15 @@ const Signup = () => {
         { withCredentials: true }
       );
 
-      if (data.success) {
-        toast.success(data.message);
+     if (data.success) {
+      toast.success(data.message);
         setTimeout(() => navigate("/dashboard"), 800);
       } else {
         toast.error(data.message);
       }
-    } catch (err) {
-      toast.error("Signup failed");
-    }
+    }catch (err) {
+  toast.error(err.response?.data?.message || "Signup failed");
+}
   };
 
   return (

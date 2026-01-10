@@ -2,7 +2,6 @@ import User from "../Models/UserModel.js";
 import { createSecretToken } from "../util/SecretToken.js";
 import bcrypt from "bcryptjs";
 
-//Signup
 export const Signup = async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -11,61 +10,51 @@ export const Signup = async (req, res) => {
       return res.json({ success: false, message: "All fields required" });
     }
 
+    const existingUser = await User.findOne({ phone });
+
+    // EXISTING USER → AUTO LOGIN
+    if (existingUser) {
+      const auth = await bcrypt.compare(password, existingUser.password);
+      if (!auth) return res.json({ success: false, message: "Incorrect password" });
+
+      const token = createSecretToken(existingUser._id);
+      res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+
+      return res.json({ success: true, mode: "login", message: "Welcome back!" });
+    }
+
+    // NEW USER → CREATE ACCOUNT
     const user = await User.create({ phone, password });
 
     const token = createSecretToken(user._id);
+    res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
 
-    res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: "lax"
-    });
-
-    res.json({ success: true, message: "Account created successfully" });
+    return res.json({ success: true, mode: "signup", message: "Account created successfully" });
 
   } catch (err) {
-  console.log("SIGNUP ERROR FULL:", err);
-  res.status(400).json({ success:false, message: err.message });
-}
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
 
-// Login
+
+/* NORMAL LOGIN */
 export const Login = async (req, res) => {
   try {
     const { phone, password } = req.body;
 
-    if (!phone || !password) {
-      return res.json({ message: "All fields are required" });
-    }
-
     const user = await User.findOne({ phone });
-    if (!user) {
-      return res.json({ message: "Incorrect phone or password" });
-    }
+    if (!user) return res.json({ success: false, message: "Incorrect phone or password" });
 
     const auth = await bcrypt.compare(password, user.password);
-    if (!auth) {
-      return res.json({ message: "Incorrect phone or password" });
-    }
+    if (!auth) return res.json({ success: false, message: "Incorrect phone or password" });
 
     const token = createSecretToken(user._id);
+    res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
 
-    res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: "lax"
-    });
+    return res.json({ success: true, message: "User logged in successfully" });
 
-
-
-
-
-    res.status(200).json({
-      message: "User logged in successfully",
-      success: true,
-      user: { id: user._id, phone: user.phone },
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

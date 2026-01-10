@@ -23,15 +23,15 @@ function Signup() {
       );
 
       if (data.success) {
-        toast.success("Account created successfully");
+  toast.success(data.message);
         setTimeout(() => {
        window.location.href = "http://localhost:3001";   // keep http for dashboard
         }, 800);
       } else {
         toast.error(data.message);
       }
-    } catch {
-      toast.error("Signup failed");
+    }  catch (err) {
+  toast.error(err.response?.data?.message || "Signup failed");
     }
   };
 
