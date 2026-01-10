@@ -1,10 +1,10 @@
 export const watchlist = [
-  { name: "INFY", symbol: "INFY" },
-  { name: "TCS", symbol: "TCS" },
-  { name: "RELIANCE", symbol: "RELIANCE" },
-  { name: "WIPRO", symbol: "WIPRO" },
-  { name: "ONGC", symbol: "ONGC" },
-  { name: "M&M", symbol: "M&M" },
+  { symbol: "NSE:INFY" },
+  { symbol: "NSE:TCS" },
+  { symbol: "NSE:RELIANCE" },
+  { symbol: "NSE:WIPRO" },
+  { symbol: "NSE:ONGC" },
+  { symbol: "NSE:M&M" },
 ];
 
 

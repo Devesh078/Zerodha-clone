@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import marketRoutes from "./Routes/MarketRoute.js";
 
 import authRoutes from "./Routes/AuthRoute.js";
 import { HoldingsModel } from "./Models/HoldingsModel.js";
@@ -26,7 +27,8 @@ app.use(cookieParser());
 
 /* ROUTES */
 app.use("/api/auth", authRoutes);
-//app.use("/api/market", marketRoutes);
+app.use("/api/market", marketRoutes);
+
 
 /* EXISTING APIs */
 app.get("/allHoldings", async (req, res) => res.json(await HoldingsModel.find()));

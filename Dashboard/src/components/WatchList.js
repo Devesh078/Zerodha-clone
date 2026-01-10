@@ -89,9 +89,10 @@ const WatchListItem = ({ stock, index }) => {
     };
   }, [stock.symbol, index]);
 
- if (!live || live.c == null || live.dp == null) {
+ if (!live || live.c == null) {
   return <li>Loading {stock.symbol}...</li>;
 }
+
 
   const isDown = live.dp < 0;
 
