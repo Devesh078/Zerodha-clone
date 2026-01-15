@@ -43,3 +43,25 @@ mongoose.connect(process.env.MONGO_URL).then(() => {
   console.log("MongoDB connected");
   app.listen(PORT, () => console.log("Backend running on http://localhost:3002"));
 });
+
+import path from "path";
+
+const __dirname = path.resolve();
+
+// Serve frontend
+app.use("/",
+  express.static(path.join(__dirname, "../frontend/build"))
+);
+
+// Serve dashboard
+app.use("/dashboard",
+  express.static(path.join(__dirname, "../Dashboard/build"))
+);
+
+app.get("*", (req, res) => {
+  if (req.originalUrl.startsWith("/dashboard")) {
+    res.sendFile(path.join(__dirname, "../Dashboard/build/index.html"));
+  } else {
+    res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  }
+});
