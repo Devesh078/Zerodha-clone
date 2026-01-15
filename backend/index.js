@@ -58,7 +58,7 @@ app.use("/dashboard",
   express.static(path.join(__dirname, "../Dashboard/build"))
 );
 
-app.get("*", (req, res) => {
+app.get(/.*/, (req, res) => {
   if (req.originalUrl.startsWith("/dashboard")) {
     res.sendFile(path.join(__dirname, "../Dashboard/build/index.html"));
   } else {
