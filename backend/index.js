@@ -17,7 +17,7 @@ const PORT = 3002;
 
 /* MIDDLEWARES */
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"],
+  origin: true,
   credentials: true
 }));
 
@@ -38,11 +38,13 @@ app.post("/newOrder", async (req, res) => {
   res.send("Order saved!");
 });
 
-/* START SERVER */
 mongoose.connect(process.env.MONGO_URL).then(() => {
   console.log("MongoDB connected");
-  app.listen(PORT, () => console.log("Backend running on http://localhost:3002"));
+
+  const PORT = process.env.PORT || 10000;
+  app.listen(PORT, () => console.log("Zerofy backend running on port", PORT));
 });
+
 
 import path from "path";
 
