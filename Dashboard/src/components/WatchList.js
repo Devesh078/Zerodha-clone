@@ -1,62 +1,93 @@
-import React, { useState, useContext,useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Tooltip, Grow } from "@mui/material";
 import { BarChartOutlined, KeyboardArrowDown, KeyboardArrowUp, MoreHoriz } from "@mui/icons-material";
 
 import { watchlist } from "../data/data";
 import GeneralContext from "./GeneralContext";
 import { DoughnutChart } from "./DoughnutChart";
-
-const labels = watchlist.map((s) => s.symbol);
-
+import { VerticalGraph } from "./VerticalGraph";
 
 const WatchList = () => {
 
-  const data ={
-  labels,
-  datasets: [
-    {
-      label: "Price",
-      data: watchlist.map(() => 1),
+  const [chartData, setChartData] = useState({
+    labels: [],
+    datasets: [{
+      label: "Live Allocation",
+      data: [],
       backgroundColor: [
-        'rgba(255, 99, 132, 0.5)',
-        'rgba(54, 162, 235, 0.5)',
-        'rgba(255, 206, 86, 0.5)',
-        'rgba(75, 192, 192, 0.5)',
-        'rgba(153, 102, 255, 0.5)',
-        'rgba(255, 159, 64, 0.5)',
+        "#ff6384", "#36a2eb", "#ffcd56",
+        "#4bc0c0", "#9966ff", "#ff9f40"
       ],
-      borderColor: [
-        'rgba(255, 99, 132, 1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-        'rgba(153, 102, 255, 1)',
-        'rgba(255, 159, 64, 1)',
-      ],
-      borderWidth: 1,
-    },
-  ],
-};
+      borderWidth: 1
+    }]
+  });
+
+  const [barData, setBarData] = useState({
+    labels: [],
+    datasets: [{
+      label: "Live P&L %",
+      data: [],
+      backgroundColor: []
+    }]
+  });
+
+  // Doughnut updater
+  useEffect(() => {
+    window.updateChart = (symbol, price) => {
+      setChartData(prev => {
+        const i = prev.labels.indexOf(symbol);
+        if (i !== -1) {
+          const d = [...prev.datasets[0].data];
+          d[i] = price;
+          return { ...prev, datasets: [{ ...prev.datasets[0], data: d }] };
+        }
+        return {
+          labels: [...prev.labels, symbol],
+          datasets: [{ ...prev.datasets[0], data: [...prev.datasets[0].data, price] }]
+        };
+      });
+    };
+  }, []);
+
+  // Bar updater
+  useEffect(() => {
+    window.updateBar = (symbol, percent) => {
+      setBarData(prev => {
+        const i = prev.labels.indexOf(symbol);
+        if (i !== -1) {
+          const d = [...prev.datasets[0].data];
+          const c = [...prev.datasets[0].backgroundColor];
+          d[i] = percent;
+          c[i] = percent >= 0 ? "#2ecc71" : "#e74c3c";
+          return { ...prev, datasets: [{ ...prev.datasets[0], data: d, backgroundColor: c }] };
+        }
+        return {
+          labels: [...prev.labels, symbol],
+          datasets: [{
+            label: "Live P&L %",
+            data: [...prev.datasets[0].data, percent],
+            backgroundColor: [...prev.datasets[0].backgroundColor, percent >= 0 ? "#2ecc71" : "#e74c3c"]
+          }]
+        };
+      });
+    };
+  }, []);
 
   return (
     <div className="watchlist-container">
       <div className="search-container">
-        <input
-          type="text"
-          placeholder="Search eg: infy, bse, nifty fut weekly, gold mcx"
-          className="search"
-        />
+        <input type="text" placeholder="Search eg: infy, bse, nifty fut weekly, gold mcx" className="search" />
         <span className="counts">{watchlist.length}/50</span>
       </div>
 
       <ul className="list">
         {watchlist.map((stock, i) => (
-  <WatchListItem stock={stock} index={i} key={i} />
-))}
-
+          <WatchListItem stock={stock} index={i} key={i} />
+        ))}
       </ul>
 
-      <DoughnutChart data={ data }/>
+      <DoughnutChart data={chartData} />
+      <VerticalGraph data={barData} />
     </div>
   );
 };
@@ -71,28 +102,20 @@ const WatchListItem = ({ stock, index }) => {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:3002/api/market/quote/${stock.symbol}`
-        );
+        const res = await fetch(`http://localhost:3002/api/market/quote/${stock.symbol}`);
         const data = await res.json();
         setLive(data);
-      } catch (e) {}
+        window.updateChart(stock.symbol, data.c);
+        window.updateBar(stock.symbol, data.dp);
+      } catch {}
     };
 
-    // stagger requests → prevents Finnhub ban
     const timeout = setTimeout(load, index * 1500);
     const refresh = setInterval(load, 10000);
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(refresh);
-    };
+    return () => { clearTimeout(timeout); clearInterval(refresh); };
   }, [stock.symbol, index]);
 
- if (!live || live.c == null) {
-  return <li>Loading {stock.symbol}...</li>;
-}
-
+  if (!live || live.c == null) return <li>Loading {stock.symbol}...</li>;
 
   const isDown = live.dp < 0;
 
@@ -106,12 +129,10 @@ const WatchListItem = ({ stock, index }) => {
           <span className="price">₹ {live.c?.toFixed(2) ?? "--"}</span>
         </div>
       </div>
-
       <WatchListActions uid={stock.symbol} />
     </li>
   );
 };
-
 
 /* ---------------- WatchList Actions ---------------- */
 
@@ -121,33 +142,16 @@ const WatchListActions = ({ uid }) => {
   return (
     <span className="actions">
       <Tooltip title="Buy (B)" placement="top" arrow TransitionComponent={Grow}>
-        <button className="buy" onClick={() => openBuyWindow(uid)}>
-          Buy
-        </button>
+        <button className="buy" onClick={() => openBuyWindow(uid)}>Buy</button>
       </Tooltip>
-
       <Tooltip title="Sell (S)" placement="top" arrow TransitionComponent={Grow}>
-        <button
-          className="sell"
-          onClick={() => {
-            console.log("SELL CLICKED FROM WATCHLIST:", uid);
-            openSellWindow(uid);
-          }}
-        >
-          Sell
-        </button>
+        <button className="sell" onClick={() => openSellWindow(uid)}>Sell</button>
       </Tooltip>
-
       <Tooltip title="Analytics (A)" placement="top" arrow TransitionComponent={Grow}>
-        <button className="action">
-          <BarChartOutlined className="icon" />
-        </button>
+        <button className="action"><BarChartOutlined className="icon" /></button>
       </Tooltip>
-
       <Tooltip title="More" placement="top" arrow TransitionComponent={Grow}>
-        <button className="action">
-          <MoreHoriz className="icon" />
-        </button>
+        <button className="action"><MoreHoriz className="icon" /></button>
       </Tooltip>
     </span>
   );

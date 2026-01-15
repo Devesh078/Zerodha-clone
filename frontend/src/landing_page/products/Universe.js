@@ -1,6 +1,7 @@
 import React from 'react';
-
+import { useNavigate } from "react-router-dom";
 function Universe() {
+    const navigate = useNavigate();
     return ( 
         <>
             <div className='container p-5'>
@@ -34,7 +35,7 @@ function Universe() {
                         <p className='mt-3 text-center text-muted text-small'>Personalized advice on life and health insurance. No spam and no mis-selling.</p>
                     </div>
                     <button className='p-3 btn btn-primary fs-5 mb-5' 
-                    style={{width:"20%",margin:"0 auto"}}>Sign up for free</button>
+                    style={{width:"20%",margin:"0 auto"}} onClick={() => navigate("/signup")}>Sign up for free</button>
                 </div>
             </div>
         </>
