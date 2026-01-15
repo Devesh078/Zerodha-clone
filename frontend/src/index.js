@@ -1,3 +1,9 @@
+import axios from "axios";
+
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = window.location.origin;
+
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";

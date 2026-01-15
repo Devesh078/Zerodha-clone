@@ -18,10 +18,10 @@ const Signup = () => {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:3002/api/auth/signup",
-        { phone, password },
-        { withCredentials: true }
-      );
+  "/api/auth/signup",
+  { phone, password },
+  { withCredentials: true }
+);
 
      if (data.success) {
       toast.success(data.message);
